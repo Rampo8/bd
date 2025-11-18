@@ -1,0 +1,6 @@
+FROM node:18.18-alpine
+WORKDIR /trade-app
+COPY package.json .
+RUN npm install
+COPY . .
+CMD npm start
