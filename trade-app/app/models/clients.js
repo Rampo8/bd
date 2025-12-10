@@ -24,18 +24,14 @@ module.exports = (sequelize, Sequelize) => {
                 key: 'id'
             }
         }
+    }, {
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ:
+        timestamps: true, // Включаем автоматические поля
+        createdAt: 'createdAt', // Явно указываем имена
+        updatedAt: 'updatedAt',
+        underscored: false // Используем camelCase
     });
 
-    Client.associate = function(models) {
-        Client.belongsTo(Client, {
-            foreignKey: 'referred_by_id',
-            as: 'referredBy'
-        });
-        Client.hasMany(Client, {
-            foreignKey: 'referred_by_id',
-            as: 'referrals'
-        });
-    };
-
+    // Ассоциации переносим в models/index.js
     return Client;
 };

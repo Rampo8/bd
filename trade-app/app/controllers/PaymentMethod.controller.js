@@ -1,260 +1,132 @@
 const db = require("../models");
-const PaymentMethod = db.paymentMethod;
+const Payment = db.payment;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new PaymentMethod
-exports.create = async (req, res) => {
-    try {
-        // Validate request
-        if (!req.body.client_id || !req.body.type || !req.body.provider || !req.body.account_number) {
-            return res.status(400).send({
-                message: "All fields (client_id, type, provider, account_number) are required!"
-            });
-        }
-
-        // Create a PaymentMethod
-        const paymentMethod = {
-            client_id: req.body.client_id,
-            type: req.body.type,
-            provider: req.body.provider,
-            account_number: req.body.account_number
-        };
-
-        // Save PaymentMethod in the database
-        const data = await PaymentMethod.create(paymentMethod);
-        
-        // Include associated data in response
-        const createdPaymentMethod = await PaymentMethod.findByPk(data.id, {
-            include: ['client']
+// Создание и сохранение нового Платежа
+exports.create = (req, res) => {
+    // ВАЖНО: Проверьте тело запроса (req.body)
+    if (!req.body.ID_Booking || !req.body.Amount) {
+        res.status(400).send({
+            message: "Content cannot be empty! ID_Booking and Amount are required."
         });
-        
-        res.send(createdPaymentMethod);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while creating the PaymentMethod."
-        });
+        return;
     }
-};
 
-// Find all PaymentMethods
-exports.findAll = async (req, res) => {
-    try {
-        const data = await PaymentMethod.findAll({
-            include: ['client']
-        });
-        res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving payment methods."
-        });
-    }
-};
+    const payment = {
+        ID_Booking: req.body.ID_Booking,
+        PaymentDate: req.body.PaymentDate || new Date(), // Используем текущую дату, если не указана
+        Amount: req.body.Amount,
+        Method: req.body.Method || "Card",
+        Status: req.body.Status || "Pending"
+    };
 
-// Find one PaymentMethod by id
-exports.findOne = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const data = await PaymentMethod.findByPk(id, {
-            include: ['client']
-        });
-        
-        if (data) {
+    Payment.create(payment)
+        .then(data => {
             res.send(data);
-        } else {
-            res.status(404).send({
-                message: `Cannot find PaymentMethod with id=${id}.`
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while creating the Payment."
             });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Error retrieving PaymentMethod with id=" + req.params.id
         });
-    }
 };
 
-// Update a PaymentMethod by id
-exports.update = async (req, res) => {
-    try {
-        const id = req.params.id;
-        
-        const num = await PaymentMethod.update(req.body, {
-            where: { id: id }
-        });
-        
-        if (num == 1) {
-            // Return updated payment method with associations
-            const updatedPaymentMethod = await PaymentMethod.findByPk(id, {
-                include: ['client']
+// Получение всех Платежей
+exports.findAll = (req, res) => {
+    Payment.findAll()
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving payments."
             });
-            res.send(updatedPaymentMethod);
-        } else {
-            res.status(404).send({
-                message: `Cannot update PaymentMethod with id=${id}. Maybe PaymentMethod was not found or req.body is empty!`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Error updating PaymentMethod with id=" + req.params.id
         });
-    }
 };
 
-// Delete a PaymentMethod by id
-exports.delete = async (req, res) => {
-    try {
-        const id = req.params.id;
-        
-        const num = await PaymentMethod.destroy({
-            where: { id: id }
+// Получение Платежа по ID
+exports.findOne = (req, res) => {
+    const id = req.params.id;
+
+    Payment.findByPk(id)
+        .then(data => {
+            if (data) {
+                res.send(data);
+            } else {
+                res.status(404).send({
+                    message: `Cannot find Payment with id=${id}.`
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: "Error retrieving Payment with id=" + id
+            });
         });
-        
+};
+
+// Обновление Платежа по ID
+exports.update = (req, res) => {
+    const id = req.params.id;
+
+    Payment.update(req.body, {
+        where: { ID_Payment: id }
+    })
+    .then(num => {
         if (num == 1) {
             res.send({
-                message: "PaymentMethod was deleted successfully!"
+                message: "Payment was updated successfully."
             });
         } else {
-            res.status(404).send({
-                message: `Cannot delete PaymentMethod with id=${id}. Maybe PaymentMethod was not found!`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Could not delete PaymentMethod with id=" + req.params.id
-        });
-    }
-};
-
-// Find all PaymentMethods by Client ID
-exports.findByClientId = async (req, res) => {
-    try {
-        const client_id = req.params.clientId;
-        const data = await PaymentMethod.findAll({
-            where: { client_id: client_id },
-            include: ['client']
-        });
-        res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving payment methods for client."
-        });
-    }
-};
-
-// Find PaymentMethods by Type
-exports.findByType = async (req, res) => {
-    try {
-        const type = req.params.type;
-        const data = await PaymentMethod.findAll({
-            where: { type: type },
-            include: ['client']
-        });
-        res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving payment methods by type."
-        });
-    }
-};
-
-// Find PaymentMethods by Provider
-exports.findByProvider = async (req, res) => {
-    try {
-        const provider = req.params.provider;
-        const data = await PaymentMethod.findAll({
-            where: { provider: provider },
-            include: ['client']
-        });
-        res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving payment methods by provider."
-        });
-    }
-};
-
-// Set default payment method for client
-exports.setDefault = async (req, res) => {
-    const transaction = await db.sequelize.transaction();
-    
-    try {
-        const client_id = req.body.client_id;
-        const payment_method_id = req.body.payment_method_id;
-        
-        if (!client_id || !payment_method_id) {
-            await transaction.rollback();
-            return res.status(400).send({
-                message: "Client ID and Payment Method ID are required!"
-            });
-        }
-        
-        // First, unset any existing default payment methods for this client
-        await PaymentMethod.update(
-            { is_default: false },
-            { 
-                where: { client_id: client_id },
-                transaction
-            }
-        );
-        
-        // Then set the new default
-        const num = await PaymentMethod.update(
-            { is_default: true },
-            { 
-                where: { 
-                    id: payment_method_id,
-                    client_id: client_id
-                },
-                transaction
-            }
-        );
-        
-        if (num == 1) {
-            await transaction.commit();
-            
-            const updatedPaymentMethod = await PaymentMethod.findByPk(payment_method_id, {
-                include: ['client']
-            });
-            
             res.send({
-                message: "Default payment method set successfully!",
-                payment_method: updatedPaymentMethod
-            });
-        } else {
-            await transaction.rollback();
-            res.status(404).send({
-                message: `Cannot set default payment method. Payment method not found or doesn't belong to client.`
+                message: `Cannot update Payment with id=${id}. Maybe Payment was not found or req.body is empty!`
             });
         }
-    } catch (err) {
-        await transaction.rollback();
+    })
+    .catch(err => {
         res.status(500).send({
-            message: err.message || "Some error occurred while setting default payment method."
+            message: "Error updating Payment with id=" + id
         });
-    }
+    });
 };
 
-// Get default payment method for client
-exports.getDefaultByClientId = async (req, res) => {
-    try {
-        const client_id = req.params.clientId;
-        const data = await PaymentMethod.findOne({
-            where: { 
-                client_id: client_id,
-                is_default: true
-            },
-            include: ['client']
-        });
-        
-        if (data) {
-            res.send(data);
+// Удаление Платежа по ID
+exports.delete = (req, res) => {
+    const id = req.params.id;
+
+    Payment.destroy({
+        where: { ID_Payment: id }
+    })
+    .then(num => {
+        if (num == 1) {
+            res.send({
+                message: "Payment was deleted successfully!"
+            });
         } else {
-            res.status(404).send({
-                message: `No default payment method found for client with id=${client_id}.`
+            res.send({
+                message: `Cannot delete Payment with id=${id}. Maybe Payment was not found!`
             });
         }
-    } catch (err) {
+    })
+    .catch(err => {
         res.status(500).send({
-            message: err.message || "Some error occurred while retrieving default payment method for client."
+            message: "Could not delete Payment with id=" + id
         });
-    }
+    });
+};
+
+// Удаление всех Платежей
+exports.deleteAll = (req, res) => {
+    Payment.destroy({
+        where: {},
+        truncate: false
+    })
+    .then(nums => {
+        res.send({ message: `${nums} Payments were deleted successfully!` });
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || "Some error occurred while removing all payments."
+        });
+    });
 };

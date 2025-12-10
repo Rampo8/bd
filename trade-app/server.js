@@ -1,32 +1,32 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+const express = require('express');
 const app = express();
-require("dotenv").config();
-var corsOptions = {
- origin: "http://localhost:8081"
-};
-app.use(cors(corsOptions));
-// parse requests of content-type - application/json
-app.use(express.json());
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
-// simple route
-app.get("/", (req, res) => {
- res.json({ message: "Welcome to trade-app application." });
-});
+const db = require('./app/models');
 
-
-const db = require("./app/models");
+// Синхронизация БД (если нужно)
 db.sequelize.sync()
-.then(() => {
- console.log("Synced db.");
-})
-.catch((err) => {
- console.log("Failed to sync db: " + err.message);
+  .then(() => console.log('БД синхронизирована'))
+  .catch(err => console.error('Ошибка синхронизации БД:', err));
+
+// Middleware (должны быть здесь, а не в маршрутах!)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Подключаем маршруты
+app.use('/api/clients', require('./app/routes/clients.routes')); // ← ключевое исправление
+
+// Обработка 404
+app.use((req, res) => {
+  res.status(404).send({ message: 'Маршрут не найден' });
 });
-// set port, listen for requests
-const PORT = process.env.NODE_DOCKER_PORT || 8080;
+
+// Глобальный обработчик ошибок
+app.use((err, req, res, next) => {
+  console.error('Глобальная ошибка:', err.stack);
+  res.status(500).send({ message: 'Внутренняя ошибка сервера' });
+});
+
+// Запуск сервера
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-console.log(`Server is running on port ${PORT}.`);
+  console.log(`Сервер запущен на порту ${PORT}`);
 });

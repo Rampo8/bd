@@ -1,136 +1,44 @@
 const db = require("../models");
-const Category = db.category;
-const Op = db.Sequelize.Op;
+const Employee = db.employee;
 
-// Create and Save a new Category
 exports.create = async (req, res) => {
     try {
-        // Validate request
-        if (!req.body.name) {
-            return res.status(400).send({
-                message: "Category name cannot be empty!"
-            });
-        }
-
-        // Create a Category
-        const category = {
-            name: req.body.name
-        };
-
-        // Save Category in the database
-        const data = await Category.create(category);
-        res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while creating the Category."
-        });
-    }
+        const data = await Employee.create(req.body);
+        res.status(201).send(data);
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// Find all Categories
-exports.findAll = async (req, res) => {
+exports.findAll = async (_req, res) => {
     try {
-        const data = await Category.findAll({
-            include: ['products'] // включаем связанные продукты
-        });
+        const data = await Employee.findAll();
         res.send(data);
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving categories."
-        });
-    }
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// Find one Category by id
 exports.findOne = async (req, res) => {
     try {
-        const id = req.params.id;
-        const data = await Category.findByPk(id, {
-            include: ['products'] // включаем связанные продукты
-        });
-        
-        if (data) {
-            res.send(data);
-        } else {
-            res.status(404).send({
-                message: `Cannot find Category with id=${id}.`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Error retrieving Category with id=" + req.params.id
-        });
-    }
+        const item = await Employee.findByPk(req.params.id);
+        item ? res.send(item) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// Update a Category by id
 exports.update = async (req, res) => {
     try {
-        const id = req.params.id;
-        
-        const num = await Category.update(req.body, {
-            where: { id: id }
-        });
-        
-        if (num == 1) {
-            res.send({
-                message: "Category was updated successfully."
-            });
-        } else {
-            res.send({
-                message: `Cannot update Category with id=${id}. Maybe Category was not found or req.body is empty!`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Error updating Category with id=" + req.params.id
-        });
-    }
+        const result = await Employee.update(req.body, { where: { id: req.params.id }});
+        result[0] ? res.send({ message: "Updated" }) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// Delete a Category by id
 exports.delete = async (req, res) => {
     try {
-        const id = req.params.id;
-        
-        const num = await Category.destroy({
-            where: { id: id }
-        });
-        
-        if (num == 1) {
-            res.send({
-                message: "Category was deleted successfully!"
-            });
-        } else {
-            res.send({
-                message: `Cannot delete Category with id=${id}. Maybe Category was not found!`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: "Could not delete Category with id=" + req.params.id
-        });
-    }
+        const result = await Employee.destroy({ where: { id: req.params.id }});
+        result ? res.send({ message: "Deleted" }) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// Find all Products by Category ID
-exports.findProductsByCategoryId = async (req, res) => {
+exports.deleteAll = async (_req, res) => {
     try {
-        const category_id = req.params.categoryId;
-        const category = await Category.findByPk(category_id, {
-            include: ['products']
-        });
-        
-        if (category) {
-            res.send(category.products);
-        } else {
-            res.status(404).send({
-                message: `Cannot find Category with id=${category_id}.`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({
-            message: err.message || "Some error occurred while retrieving products for category."
-        });
-    }
+        const count = await Employee.destroy({ where: {}, truncate: false });
+        res.send({ message: `${count} records deleted` });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
