@@ -1,46 +1,44 @@
 const db = require("../models");
-const Room = db.Room; // Используем Room, как в вашем index.js
+const OrderItem = db.orderItem;
 
 exports.create = async (req, res) => {
     try {
-        const data = await Room.create(req.body);
+        const data = await OrderItem.create(req.body);
         res.status(201).send(data);
     } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
 exports.findAll = async (_req, res) => {
     try {
-        const data = await Room.findAll();
+        const data = await OrderItem.findAll();
         res.send(data);
     } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
 exports.findOne = async (req, res) => {
     try {
-        const item = await Room.findByPk(req.params.id); // findByPk работает с определенным PK
+        const item = await OrderItem.findByPk(req.params.id);
         item ? res.send(item) : res.status(404).send({ message: "Not found" });
     } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
 exports.update = async (req, res) => {
     try {
-        // ИСПРАВЛЕНО: используем ID_Room
-        const result = await Room.update(req.body, { where: { ID_Room: req.params.id }});
+        const result = await OrderItem.update(req.body, { where: { id: req.params.id }});
         result[0] ? res.send({ message: "Updated" }) : res.status(404).send({ message: "Not found" });
     } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
 exports.delete = async (req, res) => {
     try {
-        // ИСПРАВЛЕНО: используем ID_Room
-        const result = await Room.destroy({ where: { ID_Room: req.params.id }});
+        const result = await OrderItem.destroy({ where: { id: req.params.id }});
         result ? res.send({ message: "Deleted" }) : res.status(404).send({ message: "Not found" });
     } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
 exports.deleteAll = async (_req, res) => {
     try {
-        const count = await Room.destroy({ where: {}, truncate: false });
+        const count = await OrderItem.destroy({ where: {}, truncate: false });
         res.send({ message: `${count} records deleted` });
     } catch (e) { res.status(500).send({ message: e.message }); }
 };

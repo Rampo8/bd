@@ -2,17 +2,23 @@ const express = require('express');
 const app = express();
 const db = require('./app/models');
 
-// Синхронизация БД (если нужно)
-db.sequelize.sync()
+// Синхронизация БД (для пересоздания таблиц с snake_case, временно используйте { force: true }, затем удалите)
+db.sequelize.sync({ force: true }) // Временно для принудительного пересоздания (удалите после)
   .then(() => console.log('БД синхронизирована'))
   .catch(err => console.error('Ошибка синхронизации БД:', err));
 
-// Middleware (должны быть здесь, а не в маршрутах!)
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Подключаем маршруты
-app.use('/api/clients', require('./app/routes/clients.routes')); // ← ключевое исправление
+require('./app/routes/clients.routes')(app);
+require('./app/routes/Addresses.routes')(app);
+require('./app/routes/Categories.routes')(app);
+require('./app/routes/Product.routes')(app);
+require('./app/routes/Order.routes')(app);
+require('./app/routes/OrderItem.routes')(app);
+require('./app/routes/Reviews.routes')(app);
 
 // Обработка 404
 app.use((req, res) => {

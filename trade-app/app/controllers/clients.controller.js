@@ -63,7 +63,6 @@ exports.getReferredBy = async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Вариант 1: Использование строки-подстановки
     const result = await db.sequelize.query(
       `SELECT referred_by.* 
        FROM clients referred_by 
@@ -91,7 +90,6 @@ exports.getReferredByParam = async (req, res) => {
   try {
     const id = req.params.id;
     
-    // Вариант 2: Использование параметров замещения
     const result = await db.sequelize.query(
       'SELECT referred_by.* FROM clients referred_by ' +
       'JOIN clients client ON client.referred_by_id = referred_by.id ' +
@@ -134,7 +132,9 @@ exports.getReferrals = async (req, res) => {
   } catch (e) {
     res.status(500).send({ message: e.message });
   }
-  // Статистика по рефералам
+};
+
+// Статистика по рефералам
 exports.getReferralStatistics = async (_req, res) => {
   try {
     const statistics = await db.sequelize.query(
@@ -295,5 +295,20 @@ exports.getMonthlyActivity = async (_req, res) => {
   } catch (e) {
     res.status(500).send({ message: e.message });
   }
+  exports.getClientsByPhonePart = async (req, res) => {
+  try {
+    const phonePart = req.query.phone;
+    if (!phonePart) return res.status(400).send({ message: "Phone part is required" });
+    const clients = await db.sequelize.query(
+      'SELECT * FROM clients WHERE phone_number ILIKE :phonePattern',
+      {
+        replacements: { phonePattern: `%${phonePart}%` },
+        type: QueryTypes.SELECT,
+        model: Client,
+        mapToModel: true
+      }
+    );
+    res.send(clients);
+  } catch (e) { res.status(500).send({ message: e.message }); }
 };
 };

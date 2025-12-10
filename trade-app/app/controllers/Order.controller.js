@@ -1,139 +1,44 @@
 const db = require("../models");
-// Инициализируем модель Hotel из объекта базы данных
-const Hotel = db.Hotel;
-const Op = db.Sequelize.Op;
+const Order = db.order;
 
-// 1. Создание и сохранение нового отеля (Create)
-exports.create = (req, res) => {
-    // 1.1. Валидация входных данных. Используем поля Name, Address, Stars.
-    // Проверяем, что Name и Address - не пустые строки, а Stars - определено.
-    if (!req.body.Name || !req.body.Address || typeof req.body.Stars === 'undefined' || req.body.Stars === null) {
-        res.status(400).send({
-            message: "Content cannot be empty! Name, Address, and Stars are required."
-        });
-        return;
-    }
-    
-    // 1.2. Создание объекта отеля
-    const hotel = {
-        // Имена полей в JSON должны совпадать с именами в модели (с большой буквы)
-        Name: req.body.Name,
-        Address: req.body.Address,
-        Stars: req.body.Stars
-        // ID_Hotel будет сгенерирован автоматически (autoIncrement)
-    };
-    
-    // 1.3. Сохранение отеля в БД
-    Hotel.create(hotel)
-        .then(data => {
-            // Возвращаем клиенту созданный объект
-            res.status(201).send(data);
-        })
-        .catch(err => {
-            // Обработка ошибок БД или сервера
-            res.status(500).send({
-                message: err.message || "Some error occurred while creating the Hotel."
-            });
-        });
+exports.create = async (req, res) => {
+    try {
+        const data = await Order.create(req.body);
+        res.status(201).send(data);
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// 2. Получение всех отелей из базы данных (ReadAll)
-exports.findAll = (req, res) => {
-    // Получение всех записей (без фильтрации)
-    Hotel.findAll()
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving hotels."
-            });
-        });
+exports.findAll = async (_req, res) => {
+    try {
+        const data = await Order.findAll();
+        res.send(data);
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// 3. Получение одного отеля по ID (ReadOne)
-exports.findOne = (req, res) => {
-    const id = req.params.id; // ID берется из URL-параметра
-
-    Hotel.findByPk(id)
-        .then(data => {
-            if (data) {
-                res.send(data);
-            } else {
-                res.status(404).send({
-                    message: `Cannot find Hotel with ID=${id}.`
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error retrieving Hotel with ID=" + id
-            });
-        });
+exports.findOne = async (req, res) => {
+    try {
+        const item = await Order.findByPk(req.params.id);
+        item ? res.send(item) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// 4. Обновление отеля по ID (Update)
-exports.update = (req, res) => {
-    const id = req.params.id; // ID берется из URL-параметра
-
-    Hotel.update(req.body, {
-        where: { ID_Hotel: id } // Ищем по первичному ключу
-    })
-    .then(num => {
-        if (num == 1) {
-            res.send({
-                message: "Hotel was updated successfully."
-            });
-        } else {
-            res.send({
-                message: `Cannot update Hotel with ID=${id}. Maybe Hotel was not found or req.body is empty!`
-            });
-        }
-    })
-    .catch(err => {
-        res.status(500).send({
-            message: "Error updating Hotel with ID=" + id
-        });
-    });
+exports.update = async (req, res) => {
+    try {
+        const result = await Order.update(req.body, { where: { id: req.params.id }});
+        result[0] ? res.send({ message: "Updated" }) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// 5. Удаление отеля по ID (DeleteOne)
-exports.delete = (req, res) => {
-    const id = req.params.id;
-
-    Hotel.destroy({
-        where: { ID_Hotel: id }
-    })
-    .then(num => {
-        if (num == 1) {
-            res.send({
-                message: "Hotel was deleted successfully!"
-            });
-        } else {
-            res.send({
-                message: `Cannot delete Hotel with ID=${id}. Maybe Hotel was not found!`
-            });
-        }
-    })
-    .catch(err => {
-        res.status(500).send({
-            message: "Could not delete Hotel with ID=" + id
-        });
-    });
+exports.delete = async (req, res) => {
+    try {
+        const result = await Order.destroy({ where: { id: req.params.id }});
+        result ? res.send({ message: "Deleted" }) : res.status(404).send({ message: "Not found" });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
 
-// 6. Удаление всех отелей (DeleteAll)
-exports.deleteAll = (req, res) => {
-    Hotel.destroy({
-        where: {},
-        truncate: false
-    })
-    .then(nums => {
-        res.send({ message: `${nums} Hotels were deleted successfully!` });
-    })
-    .catch(err => {
-        res.status(500).send({
-            message: err.message || "Some error occurred while removing all hotels."
-        });
-    });
+exports.deleteAll = async (_req, res) => {
+    try {
+        const count = await Order.destroy({ where: {}, truncate: false });
+        res.send({ message: `${count} records deleted` });
+    } catch (e) { res.status(500).send({ message: e.message }); }
 };
