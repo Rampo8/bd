@@ -41,4 +41,4 @@ exports.deleteAll = async (_req, res) => {
         const count = await Review.destroy({ where: {}, truncate: false });
         res.send({ message: `${count} records deleted` });
     } catch (e) { res.status(500).send({ message: e.message }); }
-};
+};  

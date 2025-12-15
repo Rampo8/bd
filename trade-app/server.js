@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
 const db = require('./app/models');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
 
-// Синхронизация БД (для пересоздания таблиц с snake_case, временно используйте { force: true }, затем удалите)
-db.sequelize.sync({ force: true }) // Временно для принудительного пересоздания (удалите после)
+// Синхронизация БД
+db.sequelize.sync()
   .then(() => console.log('БД синхронизирована'))
   .catch(err => console.error('Ошибка синхронизации БД:', err));
 
@@ -20,6 +22,27 @@ require('./app/routes/Order.routes')(app);
 require('./app/routes/OrderItem.routes')(app);
 require('./app/routes/Reviews.routes')(app);
 
+// Конфигурация Swagger
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Trade API',
+      version: '1.0.0',
+      description: 'API documentation for Trade App',
+    },
+    servers: [
+      {
+        url: `http://localhost:${process.env.NODE_DOCKER_PORT || 8080}`,
+      },
+    ],
+  },
+  apis: ['./app/routes/*.js'], // Все файлы с маршрутами
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 // Обработка 404
 app.use((req, res) => {
   res.status(404).send({ message: 'Маршрут не найден' });
@@ -32,7 +55,7 @@ app.use((err, req, res, next) => {
 });
 
 // Запуск сервера
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.NODE_DOCKER_PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
 });

@@ -6,7 +6,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   dialect: dbConfig.dialect,
   operatorsAliases: 0,
   define: {
-    underscored: true, // Для snake_case в именах полей (как в PDF п.1.1)
+    underscored: true, 
     freezeTableName: true
   },
   pool: {
@@ -38,4 +38,4 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-module.exports = db;
+module.exports = db;    
