@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const db = require('./app/models');
 const swaggerUi = require('swagger-ui-express');
@@ -10,6 +11,7 @@ db.sequelize.sync()
   .catch(err => console.error('Ошибка синхронизации БД:', err));
 
 // Middleware
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
