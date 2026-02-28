@@ -1,8 +1,11 @@
+// app/models/index.js
 const dbConfig = require("../config/db.config.js");
 const Sequelize = require("sequelize");
 
+// ✅ ИСПРАВЛЕНО: добавили port из конфига
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
+  port: dbConfig.port || 5432,           // ←←← ЭТО БЫЛО ГЛАВНОЕ ИСПРАВЛЕНИЕ
   dialect: dbConfig.dialect,
   operatorsAliases: 0,
   define: {
@@ -38,4 +41,4 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-module.exports = db;    
+module.exports = db;

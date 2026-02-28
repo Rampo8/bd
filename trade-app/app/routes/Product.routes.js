@@ -48,12 +48,12 @@ module.exports = app => {
    *         name: size
    *         schema:
    *           type: integer
-   *         description: Page size (default: 10)
+   *         description: "Page size (default: 10)"
    *       - in: query
    *         name: page
    *         schema:
    *           type: integer
-   *         description: Page number (default: 1)
+   *         description: "Page number (default: 1)"
    *     responses:
    *       200:
    *         description: A paged list of products

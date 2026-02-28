@@ -1,3 +1,5 @@
+require('dotenv').config(); // Добавлено для загрузки переменных из .env
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
