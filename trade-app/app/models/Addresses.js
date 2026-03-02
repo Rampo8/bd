@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     country: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'Address',
+    modelName: 'address',
     tableName: 'addresses',
     timestamps: true
   });

@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     description: { type: DataTypes.TEXT }
   }, {
     sequelize,
-    modelName: 'Category',
+    modelName: 'category',
     tableName: 'categories',
     timestamps: true
   });
