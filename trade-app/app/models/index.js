@@ -5,7 +5,7 @@ const Sequelize = require("sequelize");
 // ✅ ИСПРАВЛЕНО: добавили port из конфига
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
-  port: dbConfig.port || 5432,           // ←←← ЭТО БЫЛО ГЛАВНОЕ ИСПРАВЛЕНИЕ
+  port: dbConfig.port,                    // ←←← ДОБАВИЛ
   dialect: dbConfig.dialect,
   operatorsAliases: 0,
   define: {
@@ -19,7 +19,6 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     idle: dbConfig.pool.idle
   }
 });
-
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
@@ -33,7 +32,15 @@ db.order = require("./Orders.js")(sequelize, Sequelize);
 db.paymentMethod = require("./PaymentMethods.js")(sequelize, Sequelize);
 db.product = require("./Products.js")(sequelize, Sequelize);
 db.review = require("./Reviews.js")(sequelize, Sequelize);
+db.order.hasMany(db.orderItem, { 
+  foreignKey: 'order_id', 
+  as: 'orderItems' 
+});
 
+db.orderItem.belongsTo(db.order, { 
+  foreignKey: 'order_id', 
+  as: 'order' 
+});
 // Ассоциации
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {

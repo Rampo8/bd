@@ -1,4 +1,4 @@
-require('dotenv').config(); // Добавлено для загрузки переменных из .env
+require('dotenv').config(); // ←←← ЭТО ОБЯЗАТЕЛЬНО В САМОМ НАЧАЛЕ!
 
 const express = require('express');
 const cors = require('cors');
@@ -41,7 +41,7 @@ const options = {
       },
     ],
   },
-  apis: ['./app/routes/*.js'], // Все файлы с маршрутами
+  apis: ['./app/routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);

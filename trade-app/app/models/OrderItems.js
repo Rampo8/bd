@@ -5,9 +5,18 @@ module.exports = (sequelize, Sequelize) => {
     quantity: { type: Sequelize.INTEGER, allowNull: false },
     price: { type: Sequelize.FLOAT, allowNull: false }
   });
-  OrderItem.associate = function(models) {
-    OrderItem.belongsTo(models.order, { foreignKey: 'order_id', as: 'order' });
-    OrderItem.belongsTo(models.product, { foreignKey: 'product_id', as: 'product' });
+ OrderItem.associate = (models) => {
+    OrderItem.belongsTo(models.order, {
+      foreignKey: 'order_id',
+      as: 'order'           // ← оставляем этот alias
+    });
+
+    // Если есть связь с Product — она должна иметь ДРУГОЙ alias
+    OrderItem.belongsTo(models.product, {
+      foreignKey: 'product_id',
+      as: 'product'         // ← другой alias!
+    });
   };
+
   return OrderItem;
 };

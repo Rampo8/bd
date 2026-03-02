@@ -4,9 +4,17 @@ module.exports = (sequelize, Sequelize) => {
     total_amount: { type: Sequelize.FLOAT, allowNull: false },
     status: { type: Sequelize.STRING, allowNull: false }
   });
-  Order.associate = function(models) {
-    Order.belongsTo(models.client, { foreignKey: 'client_id', as: 'client' });
-    Order.hasMany(models.orderItem, { foreignKey: 'order_id', as: 'orderItems' });
+ Order.associate = (models) => {
+    Order.hasMany(models.orderItem, {
+      foreignKey: 'order_id',
+      as: 'orderItems'      // ← ВАЖНО: 'orderItems', а не 'order' !
+    });
+
+    Order.belongsTo(models.client, {
+      foreignKey: 'client_id',
+      as: 'client'
+    });
   };
+
   return Order;
 };

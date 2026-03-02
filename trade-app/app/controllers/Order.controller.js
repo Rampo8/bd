@@ -1,44 +1,55 @@
-const db = require("../models");
-const Order = db.order;
-
+// В файле app/controllers/Order.controller.js
 exports.create = async (req, res) => {
-    try {
-        const data = await Order.create(req.body);
-        res.status(201).send(data);
-    } catch (e) { res.status(500).send({ message: e.message }); }
-};
+  const transaction = await db.sequelize.transaction();
 
-exports.findAll = async (_req, res) => {
-    try {
-        const data = await Order.findAll();
-        res.send(data);
-    } catch (e) { res.status(500).send({ message: e.message }); }
-};
+  try {
+    const { client_id, status = "pending", items } = req.body;
 
-exports.findOne = async (req, res) => {
-    try {
-        const item = await Order.findByPk(req.params.id);
-        item ? res.send(item) : res.status(404).send({ message: "Not found" });
-    } catch (e) { res.status(500).send({ message: e.message }); }
-};
+    console.log("📥 Получено тело запроса:", JSON.stringify(req.body, null, 2));
 
-exports.update = async (req, res) => {
-    try {
-        const result = await Order.update(req.body, { where: { id: req.params.id }});
-        result[0] ? res.send({ message: "Updated" }) : res.status(404).send({ message: "Not found" });
-    } catch (e) { res.status(500).send({ message: e.message }); }
-};
+    if (!client_id || !items || !Array.isArray(items) || items.length === 0) {
+      await transaction.rollback();
+      return res.status(400).send({ message: "client_id и items[] обязательны" });
+    }
 
-exports.delete = async (req, res) => {
-    try {
-        const result = await Order.destroy({ where: { id: req.params.id }});
-        result ? res.send({ message: "Deleted" }) : res.status(404).send({ message: "Not found" });
-    } catch (e) { res.status(500).send({ message: e.message }); }
-};
+    // Создаём заказ
+    const order = await Order.create({ client_id, status }, { transaction });
+    console.log("✅ Заказ создан, id =", order.id);
 
-exports.deleteAll = async (_req, res) => {
-    try {
-        const count = await Order.destroy({ where: {}, truncate: false });
-        res.send({ message: `${count} records deleted` });
-    } catch (e) { res.status(500).send({ message: e.message }); }
+    // Подготовка позиций
+    const orderItemsData = items.map((item, index) => {
+      console.log(`📦 Позиция ${index + 1}:`, item);
+      return {
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,      // ← точно эти поля
+        price: item.price || 0
+      };
+    });
+
+    // Создаём позиции
+    await db.orderItem.bulkCreate(orderItemsData, { 
+      transaction,
+      fields: ['order_id', 'product_id', 'quantity', 'price']   // ← защита от лишних полей
+    });
+
+    await transaction.commit();
+
+    // Возвращаем полный заказ
+    const fullOrder = await Order.findByPk(order.id, {
+      include: [{ model: db.orderItem, as: 'orderItems' }]
+    });
+
+    console.log("🎉 Заказ успешно создан!");
+    res.status(201).send(fullOrder);
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error("❌ ОШИБКА создания заказа:", error.message);
+    console.error("Полный стек:", error.stack);
+    res.status(500).send({ 
+      message: "Не удалось создать заказ", 
+      error: error.message 
+    });
+  }
 };

@@ -19,8 +19,7 @@ async function transactionConflict(level) {
  // Трансакция 1: читаем баланс, увеличиваем
  const account1 = await Account.findByPk(1, { transaction: t1, lock: t1.LOCK.UPDATE });
  console.log(`Транзакция 1: баланс до изменения = ${account1.balance}`);
- await new Promise(res => setTimeout(res, 200)); // задержка для демонстрации
-конфликта
+ await new Promise(res => setTimeout(res, 200)); // задержка для демонстрации конфликта
  account1.balance += 100;
  await account1.save({ transaction: t1 });
  await t1.commit();

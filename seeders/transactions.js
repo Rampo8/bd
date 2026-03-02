@@ -9,7 +9,6 @@ const sequelize = new Sequelize({
   host: 'localhost', // Replace with your database host
   port: 5432, // Replace with your database port
 });
-
 // Define the Product model
 const Product = sequelize.define('Product', {
   name: {
@@ -23,7 +22,6 @@ const Product = sequelize.define('Product', {
 }, {
   // Other model options
 });
-
 // Create a transaction
 sequelize.transaction(async (t) => {
   try {
@@ -36,7 +34,6 @@ sequelize.transaction(async (t) => {
 sequelize.transaction(async (t) => {
   try {
     const product2 = await Product.create({ name: 'Product 2', price: 29.99 }, { transaction: t });
-
     // Commit the transaction if everything is successful
     await t.commit();
     console.log('Transaction committed successfully.');

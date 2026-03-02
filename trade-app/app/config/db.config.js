@@ -1,11 +1,10 @@
-// trade-app/config/db.config.js
 module.exports = {
   HOST: process.env.DB_HOST || 'localhost',
   USER: process.env.DB_USER || 'postgres',
-  PASSWORD: process.env.DB_PASSWORD,
+  PASSWORD: process.env.DB_PASSWORD || '123456',
   DB: process.env.DB_NAME || 'postgres',
   port: parseInt(process.env.DB_PORT) || 5432,
-  dialect: "postgres",
+  dialect: 'postgres',
   pool: {
     max: 5,
     min: 0,
